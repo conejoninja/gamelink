@@ -30,9 +30,10 @@ func main() {
 
 	for p := range ports {
 		err = ports[p].Configure(machine.I2CConfig{
-			Mode: machine.I2CModeTarget,
-			SDA:  machine.D0,
-			SCL:  machine.D1,
+			Frequency: 2.8 * machine.MHz,
+			Mode:      machine.I2CModeTarget,
+			SDA:       machine.D0,
+			SCL:       machine.D1,
 		})
 		if err != nil {
 			panic("failed to config I2C0 as controller")
@@ -70,15 +71,15 @@ func portListener(port byte) {
 		switch evt {
 		case machine.I2CReceive:
 			println("RECEIVED", port, n)
-			if n > 0 {
+			/*if n > 0 {
 				ptr = buf[0]
-			}
-			println("RECEIVED_", buf[0])
+			}*/
+			println("RECEIVED_", buf[0], n)
 
-			for o := 1; o < n; o++ {
+			for o := 0; o < n; o++ {
 				println("RECEIVED=", buf[o])
-				mem[port][ptr] = buf[o]
-				ptr++
+				mem[port][o] = buf[o]
+				//				ptr++
 			}
 
 		case machine.I2CRequest:
