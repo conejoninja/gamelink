@@ -15,13 +15,23 @@ const (
 	maxTxSize   = 16
 )
 
+type Message struct {
+	read bool
+	data [10]byte
+}
+
+type Stack struct {
+	stack [20]Message
+	ptr   byte
+}
+
 var (
 	ports = []*machine.I2C{
 		machine.I2C0,
-		//machine.I2C1,
+		machine.I2C1,
 	}
-	err error
-	mem [2][256]byte
+	err    error
+	stacks [2]Stack
 )
 
 func main() {
@@ -45,8 +55,8 @@ func main() {
 		}
 	}
 	println("GOING TO LISTEN")
-	portListener(PORTA)
-	//go portListener(PORTB)
+	go portListener(PORTA)
+	go portListener(PORTB)
 
 	for {
 		time.Sleep(1 * time.Second)
@@ -55,10 +65,8 @@ func main() {
 }
 
 func portListener(port byte) {
-	println("LISTENING N ")
 	println("LISTENING ON ", port)
 	buf := make([]byte, 1)
-	var ptr uint8
 
 	for {
 		println("F", port)
@@ -70,24 +78,26 @@ func portListener(port byte) {
 
 		switch evt {
 		case machine.I2CReceive:
-			println("RECEIVED", port, n)
-			/*if n > 0 {
-				ptr = buf[0]
-			}*/
-			println("RECEIVED_", buf[0], n)
+			println("RECEIVED", port, buf[0], n)
 
+			if n > 10 {
+				n = 10
+			}
+			stacks[port].ptr = (stacks[port].ptr + 1) % 20
 			for o := 0; o < n; o++ {
 				println("RECEIVED=", buf[o])
-				mem[port][o] = buf[o]
-				//				ptr++
+				stacks[port].stack[stacks[port].ptr].data[o] = buf[o]
+			}
+			for o := n; o < 10; o++ {
+				stacks[port].stack[stacks[port].ptr].data[o] = 0
 			}
 
 		case machine.I2CRequest:
-			println("REQUESTED", port, mem[port][ptr:256])
-			ports[port].Reply(mem[port][ptr:256])
+			portClient := (port + 1) % 2
+			println("REQUESTED", port, portClient, stacks[portClient].stack[stacks[portClient].ptr].data[:])
+			ports[port].Reply(stacks[portClient].stack[stacks[portClient].ptr].data[:])
 
 		case machine.I2CFinish:
-			// nothing to do
 			println("I2C FINISH")
 
 		default:
