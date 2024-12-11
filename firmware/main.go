@@ -76,6 +76,10 @@ func main() {
 			ws.WriteColors(led[:])
 			panic("failed to listen as I2C target")
 		}
+
+		for s := range stackSize {
+			stacks[p].stack[s].read = true
+		}
 	}
 	println("GOING TO LISTEN")
 	go portListener(PORTA)
@@ -91,12 +95,10 @@ func main() {
 
 func portListener(port byte) {
 	println("LISTENING ON ", port)
-	buf := make([]byte, 1)
+	buf := make([]byte, 10)
 
 	for {
-		println("F", port)
 		evt, n, err := ports[port].WaitForEvent(buf)
-		println("G", evt, n, err)
 		if err != nil {
 			println("FOR ERROR", err)
 		}
@@ -110,7 +112,7 @@ func portListener(port byte) {
 			}
 			stacks[port].writePtr = (stacks[port].writePtr + 1) % stackSize
 			for o := 0; o < n; o++ {
-				println("RECEIVED=", buf[o])
+				println("RECEIVED=", buf[o], stacks[port].writePtr, port)
 				stacks[port].stack[stacks[port].writePtr].data[o] = buf[o]
 			}
 			for o := n; o < dataSize; o++ {
@@ -125,13 +127,12 @@ func portListener(port byte) {
 				ports[port].Reply([]byte{0})
 				continue
 			}
-			println("REQUESTED", port, portClient, stacks[portClient].stack[ptr].data[:])
+			println("REQUESTED", port, portClient, stacks[portClient].stack[ptr].data[:], ptr)
 			stacks[portClient].readPtr = ptr
 			ports[port].Reply(stacks[portClient].stack[ptr].data[:])
 			stacks[portClient].stack[ptr].read = true
 
 		case machine.I2CFinish:
-			println("I2C FINISH")
 
 		default:
 			println("default")
