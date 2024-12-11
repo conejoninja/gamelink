@@ -27,6 +27,13 @@ const (
 	GAME_START
 	GAME_WAIT_OTHER
 	GAME_WAIT_KEY
+	WIN
+	LOSE
+	NONE
+)
+
+const (
+	KEY_PRESSED = 12
 )
 
 var (
@@ -57,6 +64,7 @@ var (
 	}
 
 	matrixBtn [12]bool
+	colors    []uint32
 )
 
 const (
@@ -126,7 +134,7 @@ func main() {
 		c.Configure(machine.PinConfig{Mode: machine.PinInputPulldown})
 	}
 
-	colors := []uint32{
+	colors = []uint32{
 		black, black, black, black,
 		black, black, black, black,
 		black, black, black, black,
@@ -197,14 +205,38 @@ func main() {
 			} else {
 				colors[pressed] = blue
 			}
-			gl.Write([]uint8{GAME_WAIT_KEY, uint8(pressed)})
+			gl.Write([]uint8{KEY_PRESSED, uint8(pressed)})
 			state = GAME_WAIT_OTHER
 			break
 		case GAME_WAIT_OTHER:
 			buffer, err := gl.Read()
-			println("WAITING", err, len(buffer), buffer[0])
+			if err != nil {
+				break
+			}
+			if buffer[0] == KEY_PRESSED {
+				if hostGame {
+					colors[buffer[1]] = blue
+				} else {
+					colors[buffer[1]] = red
+				}
+				state = GAME_WAIT_KEY
+			}
 			tinyfont.WriteLine(&display, &proggy.TinySZ8pt7b, 10, 20, "Waiting for other", textWhite)
 			tinyfont.WriteLine(&display, &proggy.TinySZ8pt7b, 10, 34, "player's move", textWhite)
+
+			winlose := checkTicTacToe()
+			if winlose == WIN {
+				state = WIN
+			} else if winlose == LOSE {
+				state = LOSE
+			}
+
+			break
+		case WIN:
+			tinyfont.WriteLine(&display, &proggy.TinySZ8pt7b, 10, 20, "You WIN", textWhite)
+			break
+		case LOSE:
+			tinyfont.WriteLine(&display, &proggy.TinySZ8pt7b, 10, 20, "You LOSE", textWhite)
 			break
 		}
 
@@ -267,4 +299,43 @@ func getMatrixState() {
 	matrixBtn[9] = rowPins[0].Get()
 	matrixBtn[10] = rowPins[1].Get()
 	matrixBtn[11] = rowPins[2].Get()
+}
+
+func checkTicTacToe() int8 {
+	gamePlays := [][3]int{
+		[3]int{0, 1, 2}, // VERTICAL
+		[3]int{3, 4, 5},
+		[3]int{6, 7, 8},
+		[3]int{0, 10, 11},
+
+		[3]int{0, 3, 6}, // HORIZONTAL
+		[3]int{3, 6, 9},
+		[3]int{1, 4, 7},
+		[3]int{4, 7, 10},
+		[3]int{2, 5, 8},
+		[3]int{5, 8, 11},
+
+		[3]int{0, 4, 8}, //DIAGONAL
+		[3]int{3, 7, 11},
+		[3]int{2, 4, 6},
+		[3]int{5, 7, 9},
+	}
+
+	c1 := uint32(blue)
+	c2 := uint32(red)
+	if hostGame {
+		c1 = red
+		c2 = blue
+	}
+	for g := 0; g < len(gamePlays); g++ {
+		if colors[gamePlays[g][0]] == c1 && colors[gamePlays[g][1]] == c1 && colors[gamePlays[g][2]] == c1 {
+			return WIN
+		}
+		if colors[gamePlays[g][0]] == c2 && colors[gamePlays[g][1]] == c2 && colors[gamePlays[g][2]] == c2 {
+			return LOSE
+		}
+	}
+
+	return NONE
+
 }

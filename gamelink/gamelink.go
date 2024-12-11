@@ -25,13 +25,11 @@ func (d *Device) Configure() {
 }
 
 func (d *Device) Write(data []uint8) error {
-	println("GL write")
 	return d.bus.Tx(d.Address, data, nil)
 }
 
 func (d *Device) Read() ([]uint8, error) {
-	println("GL read")
 	data := make([]uint8, 10)
-	err := d.bus.Tx(d.Address, []byte{1}, data)
+	err := d.bus.Tx(d.Address, nil, data)
 	return data, err
 }
