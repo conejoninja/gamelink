@@ -31,7 +31,7 @@ func (d *Device) Write(data []uint8) error {
 
 func (d *Device) Read() ([]uint8, error) {
 	println("GL read")
-	data := make([]uint8, 1)
+	data := make([]uint8, 10)
 	err := d.bus.Tx(d.Address, []byte{1}, data)
 	return data, err
 }
