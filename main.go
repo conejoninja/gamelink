@@ -245,15 +245,6 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	//buf, err := gl.Read()
-	//println("READ", buf[0], err)
-
-	err := gl.Write([]byte{3, 1, 2, 3})
-	println("ERROR", err)
-
-	buf, err := gl.Read()
-	println("READ", buf[0], len(buf), err)
-
 }
 
 func getMatrixState() {
