@@ -94,25 +94,20 @@ func main() {
 }
 
 func portListener(port byte) {
-	println("LISTENING ON ", port)
 	buf := make([]byte, 10)
 
 	for {
 		evt, n, err := ports[port].WaitForEvent(buf)
 		if err != nil {
-			println("FOR ERROR", err)
 		}
 
 		switch evt {
-		case machine.I2CReceive:
-			println("RECEIVED", port, buf[0], n)
-
+		case machine.I2CReceive: // store received message
 			if n > dataSize {
 				n = dataSize
 			}
 			stacks[port].writePtr = (stacks[port].writePtr + 1) % stackSize
 			for o := 0; o < n; o++ {
-				println("RECEIVED=", buf[o], stacks[port].writePtr, port)
 				stacks[port].stack[stacks[port].writePtr].data[o] = buf[o]
 			}
 			for o := n; o < dataSize; o++ {
@@ -120,14 +115,13 @@ func portListener(port byte) {
 			}
 			stacks[port].stack[stacks[port].writePtr].read = false
 
-		case machine.I2CRequest:
+		case machine.I2CRequest: // return the oldest unread message
 			portClient := (port + 1) % 2
 			ptr := (stacks[portClient].readPtr + 1) % stackSize
 			if stacks[portClient].stack[ptr].read {
 				ports[port].Reply([]byte{0})
 				continue
 			}
-			println("REQUESTED", port, portClient, stacks[portClient].stack[ptr].data[:], ptr)
 			stacks[portClient].readPtr = ptr
 			ports[port].Reply(stacks[portClient].stack[ptr].data[:])
 			stacks[portClient].stack[ptr].read = true
@@ -135,7 +129,6 @@ func portListener(port byte) {
 		case machine.I2CFinish:
 
 		default:
-			println("default")
 		}
 	}
 }
