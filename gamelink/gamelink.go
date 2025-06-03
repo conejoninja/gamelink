@@ -6,6 +6,7 @@ import (
 )
 
 const Address = 0x76
+const ConfigureByte = 0xD1
 
 // Device wraps an I2C connection to a GameLink device.
 type Device struct {
@@ -21,9 +22,11 @@ func New(bus drivers.I2C) Device {
 	}
 }
 
-// Configure does nothing (for the moment)
-func (d *Device) Configure() {
-	println("GL configure")
+// Configure does empty the stack of the gamelink from this side
+func (d *Device) Configure() ([]uint8, error) {
+	data := make([]uint8, 3)
+	err := d.bus.Tx(d.Address, []uint8{ConfigureByte}, data)
+	return data, err
 }
 
 // Write sends a message to the GameLink to be read later by the other device connected to
