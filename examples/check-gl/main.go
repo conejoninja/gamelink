@@ -6,7 +6,7 @@ import (
 	"machine"
 	"time"
 
-	"github.com/conejoninja/gamelink/gamelink"
+	"github.com/conejoninja/gamelink"
 	"tinygo.org/x/drivers"
 	"tinygo.org/x/drivers/encoders"
 	"tinygo.org/x/drivers/ssd1306"
