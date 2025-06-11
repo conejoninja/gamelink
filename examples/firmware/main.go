@@ -66,8 +66,8 @@ func main() {
 		err = ports[p].Configure(machine.I2CConfig{
 			Frequency: 2.8 * machine.MHz,
 			Mode:      machine.I2CModeTarget,
-			SDA:       pinSDA[p],
-			SCL:       pinSCL[p],
+			//SDA:       pinSDA[p],
+			//SCL:       pinSCL[p],
 		})
 		if err != nil {
 			led[0] = color.RGBA{0xFF, 0x00, 0x00, 0xFF}
@@ -81,6 +81,7 @@ func main() {
 			ws.WriteColors(led[:])
 			panic("failed to listen as I2C target")
 		}
+		println("SET UP PORT", p)
 
 		for s := range StackSize {
 			stacks[p].stack[s].read = true
@@ -138,17 +139,19 @@ func portListener(port byte) {
 		case machine.I2CRequest: // return the oldest unread message
 			portClient := (port + 1) % 2
 			if sendConfigInfo && buf[0] == ConfigureByte {
-				ports[port].Reply(versionMessage)
-				println("SENDING CONFIG BYTE", versionMessage[0], versionMessage[1], versionMessage[2]) //, versionMessage[3], versionMessage[4], versionMessage[5])
+				ports[port].Reply(versionMessage[:])
+				println("SENDING CONFIG BYTE", versionMessage[0], versionMessage[1], versionMessage[2], "PORT", port) //, versionMessage[3], versionMessage[4], versionMessage[5])
 
 			} else {
 				ptr := (stacks[portClient].readPtr + 1) % StackSize
 				if stacks[portClient].stack[ptr].read {
 					ports[port].Reply([]byte{0})
+					println("REPLY 0")
 					continue
 				}
 				stacks[portClient].readPtr = ptr
 				ports[port].Reply(stacks[portClient].stack[ptr].data[:])
+				println("REPLY DATA[:]", stacks[portClient].stack[ptr].data[0], "PORT", port)
 				stacks[portClient].stack[ptr].read = true
 			}
 			sendConfigInfo = false
