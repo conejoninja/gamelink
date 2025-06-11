@@ -64,10 +64,10 @@ func main() {
 
 	for p := range ports {
 		err = ports[p].Configure(machine.I2CConfig{
-			Frequency: 2.8 * machine.MHz,
-			Mode:      machine.I2CModeTarget,
-			SDA:       pinSDA[p],
-			SCL:       pinSCL[p],
+			//Frequency: 2.8 * machine.MHz,
+			Mode: machine.I2CModeTarget,
+			//SDA:       pinSDA[p],
+			//SCL:       pinSCL[p],
 		})
 		if err != nil {
 			led[0] = color.RGBA{0xFF, 0x00, 0x00, 0xFF}
@@ -86,7 +86,6 @@ func main() {
 			stacks[p].stack[s].read = true
 		}
 	}
-	println("GOING TO LISTEN")
 	go portListener(PORTA)
 	go portListener(PORTB)
 	led[0] = color.RGBA{0x00, 0xFF, 0x00, 0xFF}
@@ -123,7 +122,6 @@ func portListener(port byte) {
 				}
 				stacks[0].writePtr = 0
 				stacks[1].writePtr = 0
-				println("RECEIVED CONFIG BYTE")
 			} else {
 				sendConfigInfo = false
 				stacks[port].writePtr = (stacks[port].writePtr + 1) % StackSize
@@ -139,8 +137,6 @@ func portListener(port byte) {
 			portClient := (port + 1) % 2
 			if sendConfigInfo && buf[0] == ConfigureByte {
 				ports[port].Reply(versionMessage)
-				println("SENDING CONFIG BYTE", versionMessage[0], versionMessage[1], versionMessage[2]) //, versionMessage[3], versionMessage[4], versionMessage[5])
-
 			} else {
 				ptr := (stacks[portClient].readPtr + 1) % StackSize
 				if stacks[portClient].stack[ptr].read {

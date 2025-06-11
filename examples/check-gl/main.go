@@ -24,6 +24,7 @@ var (
 	rotaryOldValue, rotaryNewValue int
 	textWhite                      = color.RGBA{255, 255, 255, 255}
 	textBlack                      = color.RGBA{0, 0, 0, 255}
+	mainPad                        bool
 )
 
 func main() {
@@ -71,11 +72,11 @@ func main() {
 	if hasGameLink {
 		state = START_GL
 	}
-	println("STATE", state, hasGameLink)
+
 	display.ClearBuffer()
 	display.Display()
 
-	for {
+	for state != MAIN {
 
 		display.ClearBuffer()
 
@@ -135,9 +136,9 @@ func main() {
 				println("pressed")
 				state = MAIN
 				if menuOption == 0 {
-					//hostGame = true
+					mainPad = true
 				} else {
-					//hostGame = false
+					mainPad = false
 				}
 			}
 
