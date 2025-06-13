@@ -36,7 +36,7 @@ func (d *Device) Write(data []uint8) error {
 
 // Read returns a message from the GameLink sent by the other device connected to
 func (d *Device) Read() ([]uint8, error) {
-	data := make([]uint8, 5)
+	data := make([]uint8, 4)
 	err := d.bus.Tx(d.Address, nil, data)
 	return data, err
 }
